@@ -1,0 +1,61 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2306                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volVectorField; // Векторное поле 'U'
+    object      U;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 1 -1 0 0 0 0]; // Размерность поля 'U' это [метры]/[секунды]
+
+// Начальные условия равномерные
+internalField   uniform (1.0 0.0 0.0);
+
+// Граничные условя (первого рода, равномерные и нулевые)
+boundaryField
+{
+    boundaryRegion // Имя граничной области (см. файл blockMeshDict)
+    {
+        type  codedFixedValue; // тип неравномерных граничных условий первого рода
+        value  uniform 0; // значения для инициализации (произвольное)
+
+        name	codedBC; // 'name' имя созданного граничного условия
+
+        code // участок с кодом C++
+        #{
+            // 'boundaryRegion' участок сетки, относящийся к границ
+            const fvPatch & boundaryRegion = this->patch();
+
+            // центры граничных граней граней
+            const vectorField& facesCenters = boundaryRegion.Cf();
+
+            // значение времени
+            const scalar t = this->db().time().value();
+
+            // значение поля 'U' в центрах граней, участка границы boundaryRegion
+            vectorField& Ub = *this;
+
+            forAll(facesCenters, i) // цикл по всем граням границы
+            {
+                scalar x = facesCenters[i].x();
+                scalar y = facesCenters[i].y();
+                scalar z = facesCenters[i].z();
+
+                // формула для граничных значений поля 'U'
+                // на каждом временном слое значения обновляются
+                Ub[i] = vector(x, Foam::sin(y), Foam::exp(z) + t);
+            }
+        #};
+    }
+}
+
+
+// ************************************************************************* //

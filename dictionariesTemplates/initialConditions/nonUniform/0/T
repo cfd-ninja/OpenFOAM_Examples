@@ -1,0 +1,82 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2306                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      T;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Выбор размерности для поля 'T'
+//               кг м с К моль А кд
+dimensions      [0  0 0 1  0   0  0];
+
+// Почти весь код ниже можно считать "шаблоном"
+// Для разных формул изменяется в только содержимое цикла 'forAll'
+
+// С помощью codeStream значения в начальный момент времени
+// Будут вычислены во время запуска расчетов
+internalField   #codeStream
+{
+    codeInclude // Подключение основного заголовочного файла
+    #{ #include "fvCFD.H" #};
+
+    codeOptions // Добавление новых путей для поиска подключаемых файлов при компиляции
+    #{
+			-I$(LIB_SRC)/finiteVolume/lnInclude \
+			-I$(LIB_SRC)/meshTools/lnInclude
+    #};
+
+    codeLibs // Подключение библиотек
+    #{
+			-lmeshTools \
+			-lfiniteVolume
+    #};
+
+		// Секция с кодом C++
+    code
+    #{
+			// Получение данных о сетке (объект 'mesh')
+			const IOdictionary& d = static_cast<const IOdictionary&>(dict);
+			const fvMesh& mesh = refCast<const fvMesh>(d.db());
+
+			// Создание списка скалярных значений ('T')
+			// Эти значения будут записаны в центры ячеек, как начальное условие
+			scalarField T(mesh.nCells()); // n.Cells() возвращает кол-во ячеек
+
+			// 'CC' это список векторных значений -- центры ячеек
+			const vectorField& CC = mesh.C();
+
+			forAll(CC, i) // Цикл по всем центрам ячеек
+			{
+				scalar x = CC[i].x(); // 'X' - координата очередной ячейки
+				scalar y = CC[i].y(); // 'Y' - координата очередной ячейки
+				scalar z = CC[i].z(); // 'Z' - координата очередной ячейки
+
+				// Формула, определяющая начальные условия на поле 'T'
+				T[i] = x + Foam::cos(y) + Foam::exp(z);
+			}
+
+			T.writeEntry("", os); // Оператор записи значений (в оперативную память)
+    #};
+};
+
+
+// Граничные условя (первого рода, равномерные и нулевые)
+boundaryField
+{
+    boundaryRegion // Имя граничной области (см. файл blockMeshDict)
+    {
+        type	fixedValue;
+        value	uniform 0.0;
+    }
+}
+
+// ************************************************************************* //

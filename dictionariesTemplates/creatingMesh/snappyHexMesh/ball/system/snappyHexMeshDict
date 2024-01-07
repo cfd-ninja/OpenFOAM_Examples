@@ -1,0 +1,145 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.0.0                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      snappyHexMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Какие из трёх этапов создания сетки проводить
+castellatedMesh true; // Этап 1. Аппроксимация границы области кубиками
+snap            true; // Этап 2. Уточнение границы за счёт 'деформации' кубиков
+                      // Т.е. в сетке появятся различные многогранники
+addLayers       true; // Этап 3. Добавление слоёв с дополнительным измельчением сетки
+
+
+// Описание поверхностей, которые выделяют нужную область в
+// Большом пространстве, создаваемом с помощью 'blockMesh'
+// В качестве поверхностей можно использовать примитивы OpenFOAM
+geometry
+{
+    outerSphere // Имя поверхности
+    // Оно же будет использовано при задании граничных условий
+    {
+        // Кроме searchableSphere, есть много других примитивов
+        // Например, box, cylinder...
+        type searchableSphere; // Сфера
+        centre (0 0 0);
+        radius 0.5;
+    }
+};
+
+
+// Параметры первого этапа (аппроксимация области кубиками)
+castellatedMeshControls
+{
+    maxLocalCells 1000000;
+    maxGlobalCells 2000000;
+    minRefinementCells 0;
+    maxLoadUnbalance 0.10;
+    nCellsBetweenLevels 3;
+	
+    features (); // 'Особенностей' у поверхности нет, их отдельно не обрабатываем
+    
+    refinementSurfaces
+    {  
+        outerSphere
+        {
+            level (2 3); // '2' минимальная кратность измельчения, '3' максимальная
+            patchInfo
+            {
+                type wall; // Тип граничной области
+            }
+        }      
+    }
+
+    resolveFeatureAngle 45; // Оптимальные значения: [30; 60]
+    refinementRegions {}
+    locationInMesh (0 0 0); // Точка должна лежать строго внутри нужной области
+    allowFreeStandingZoneFaces true;
+}
+
+
+// Параметры второго этапа (уточнение границы области заменой кубиков на многогранники)
+snapControls
+{
+    nSmoothPatch 3;
+    tolerance 1.0;
+    nSolveIter 30;
+    nRelaxIter 5;
+}
+
+
+// Параметры третьего этапа (добавление дополнительных слоев)
+addLayersControls
+{
+    relativeSizes true;
+	
+    layers
+    {
+        outerSphere
+        {
+            nSurfaceLayers 3;
+        }
+    }
+
+    expansionRatio 1.5;
+    minMedialAxisAngle 30;
+    finalLayerThickness 0.5;
+    //finalLayerRatio 0.01;
+    minThickness 0.1;
+    nGrow -1; // 0;
+    featureAngle 30;
+    nRelaxIter 5;
+    nSmoothSurfaceNormals 1;
+    nSmoothNormals 3;
+    nSmoothThickness 10;
+    maxFaceThicknessRatio 1000; //0.5;
+    maxThicknessToMedialRatio 0.3;
+    minMedianAxisAngle 90;
+    nBufferCellsNoExtrude 0;
+    nLayerIter 50; //100;
+    nRelaxedIter 0; //20;
+}
+
+
+// Настройки для определения качества сетки
+// Это обязательный пункт, по нему определяется успешнос создана сетка или нет
+meshQualityControls
+{
+    maxNonOrtho 75;
+    maxBoundarySkewness 20;
+    maxInternalSkewness 4;
+    maxConcave 80;
+    minVol 1e-200;
+    minTetQuality 1e-9;
+    minArea -1;
+    minTwist 0.05;
+    minDeterminant 1e-8; //0.001;
+
+    minFaceWeight 0.05;
+    minVolRatio 0.01;
+    minTriangleTwist -1;
+
+    nSmoothScale 4;
+    errorReduction 0.75;
+
+    relaxed
+    {
+        maxNonOrtho 75;
+        minTetQuality -1e30;
+        minTwist    -1;
+    }
+}
+
+
+debug 0;
+mergeTolerance 1e-6;

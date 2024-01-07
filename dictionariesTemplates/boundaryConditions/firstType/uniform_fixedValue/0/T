@@ -1,0 +1,32 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2306                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      T;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+              //[kg m s K kgmol A cd]
+dimensions      [0 0 0 1 0 0 0]; // размерность скалярного поля 'T'
+
+// Начальные условия
+internalField   uniform 0.0; // всюду ноль
+
+// Граничные условия
+boundaryField
+{
+    boundaryRegion // имя участка границы
+    {
+        type    fixedValue; // тип граничного условия
+        value   uniform 3.14; // равномерное значение поля 'T' на границе
+    }
+}
+// ************************************************************************* //

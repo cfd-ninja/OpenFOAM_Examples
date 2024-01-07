@@ -1,0 +1,56 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2306                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      fvOptions;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+scalarLinerizedSourceTerm
+{
+    type            scalarSemiImplicitSource;
+    active          true;
+
+    scalarSemiImplicitSourceCoeffs
+    {
+        // Здесь источник задаётся для всей расчетной области.
+        // Но, можно задавать источник в заданных участках области.
+        selectionMode   all; // all, cellSet, cellZone, points
+        volumeMode      absolute; // specific, absolute;
+        injectionRateSuSp
+        {
+            T     (1 -2);
+            //    (Su Sp), Su - 'свободный коэффициент',
+            //             Sp - 'коэффициент' при неизвестной, в данном случае перед 'T'
+            // То есть здесь задан источник: S = 1 - 2*T
+        }
+    }
+}
+
+vectorLinerizedSourceTerm
+{
+    type            vectorSemiImplicitSource;
+    active          true;
+
+    vectorSemiImplicitSourceCoeffs
+    {
+        selectionMode   all; // all, cellSet, cellZone, points
+        volumeMode      absolute; // specific, absolute;
+        injectionRateSuSp
+        {
+            U     ((1 2 3) -10);
+            //    (Su Sp), Su - 'свободный вектор',
+            //             Sp - 'коэффициент' при неизвестной, в данном случае перед 'U'
+            // То есть здесь задан источник: S = (1,2,3) - 10*(Ux, Uy, Uz)
+        }
+    }
+}

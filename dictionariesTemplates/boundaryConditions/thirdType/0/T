@@ -1,0 +1,59 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2306                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField; //Скалярное поле температур
+    object      T;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 0 0 1 0 0 0]; //Размерность К-Кельвины
+
+// Начальные условия
+internalField   uniform 0; //Начальное распределение температуры
+
+// Граничные условия
+boundaryField
+{
+    boundaryRegion // Имя участка границы, для которого задается условие
+    {
+        type             codedMixed;
+        refValue         uniform 0; // Произвольное значение для инициализации
+        refGradient      uniform 0; // Произвольное значение для инициализации
+        valueFraction    uniform 0; // Произвольное значение для инициализации
+        name             codedRobinBC;
+        
+        code 
+        #{
+            const fvPatch& boundaryPatch   = this->patch(); // Доступ к границе сетки
+            const vectorField& CF = boundaryPatch.Cf(); // Массив центров граничных граней
+
+            //!!! delta ОБРАТНЫЕ расстояния от центров яччек до граней !!!
+            const scalarField& delta      = spherePatch.deltaCoeffs();  
+    
+            const scalar h = 1.0;
+            const scalar k = 1.0;
+            
+            forAll(CF, i) // Цикл по всем граням учатска границы 'boundaryRegion'
+            {
+                scalar x = CF[i].x();
+                scalar y = CF[i].y();
+                scalar z = CF[i].z();
+
+                // "Изменяемая" часть
+                this->valueFraction()[i] = 1.0 / (1.0 + (k*delta[i])/h); 
+                this->refGrad()[i] = 0.0;
+                this->refValue()[i] = x + y + z + Foam::sin(t); // Формула в условии 3-го рода
+            }
+        #};
+    }
+}
+
+// ************************************************************************* //

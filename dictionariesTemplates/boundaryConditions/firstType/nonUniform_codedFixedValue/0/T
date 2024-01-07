@@ -1,0 +1,59 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2306                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      T;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 0 0 1 0 0 0]; // размерность поля 'T'
+
+// Начальные условия
+internalField   uniform 0.0;
+
+// Граничные условия
+boundaryField
+{
+	boundaryRegion // имя участка границы
+	{
+		type  codedFixedValue; // тип неравномерных граничных условий первого рода
+		value  uniform 0; // значения для инициализации (произвольное)
+
+		name	codedBC; // 'name' имя созданного граничного условия
+
+		code // участок с кодом C++
+		#{
+			// 'boundaryRegion' участок сетки, относящийся к границ
+			const fvPatch & boundaryRegion = this->patch();
+
+			// центры граничных граней граней
+			const vectorField& facesCenters = boundaryRegion.Cf();
+
+			// значение времени
+			const scalar t = this->db().time().value();
+
+			// значение поля 'T' в центрах граней, участка границы boundaryRegion
+			scalarField& Tb = *this;
+
+			forAll(facesCenters, i) // цикл по всем граням границы
+			{
+				scalar x = facesCenters[i].x();
+				scalar y = facesCenters[i].y();
+				scalar z = facesCenters[i].z();
+				
+				// формула для граничных значений поля 'T'
+				// на каждом временном слое значения обновляются
+				Tb[i] = Foam::sin(x) + Foam::cos(y) + Foam::exp(z) + 10.0*t;
+			}
+		#};
+	}
+}
+// ************************************************************************* //

@@ -1,0 +1,5 @@
+#!/bin/bash
+
+blockMesh # Подготовить "объемлющую сетку из кубиков"
+
+snappyHexMesh -overwrite # Построить сетку для шара

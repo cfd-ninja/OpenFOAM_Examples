@@ -1,0 +1,49 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2306                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      fvSchemes;
+}
+// ************************************************************************* //
+
+// Схема, указанная в 'default' применяется ко всем слагаемым такого вида
+
+ddtSchemes // Аппроксимация производной по времени
+{
+    default         Euler;
+}
+
+gradSchemes // Аппроксимация градиента
+{
+    default         Gauss linear;
+}
+
+divSchemes // Аппроксимация дивергенции
+{
+    default         Gauss linear;
+}
+
+laplacianSchemes // Аппроксимация оператора Лапласа
+{
+    default         none; // Схема по умолчанию не определена
+    laplacian(DT,T)    Gauss linear orthogonal;
+}
+
+interpolationSchemes // Аппроксимация значений на гранях контрольных объемов
+{
+    default         linear;
+}
+
+snGradSchemes // Аппроксимация потока на гранях контрольных объёмов
+{
+    default         orthogonal;
+}
+// ************************************************************************* //

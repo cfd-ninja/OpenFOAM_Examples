@@ -1,0 +1,19 @@
+#!/bin/bash
+
+
+# Удаление результатов предыдущих запусков
+# (Это необязательно, при новом запуске утилиты OpenFOAM перезапишут нужные файлы)
+rm -r dynamicCode &> /dev/null
+rm -r constant/polyMesh &> /dev/null # Расчетная сетка
+rm -r ?.? ?.?? ?.??? ?.???? 1 2 3 4 5 &> /dev/null # Предыдущие временные слои
+rm -r postProcessing &> /dev/null # Результат использования "-func 'cellMax()'"
+
+
+blockMesh # Создание сетки
+
+laplacianFoam # Проведение расчетов (решение уравнения теплопроводности)
+
+# Определение максимального значения абсолюной погрешности
+setExprFields -noZero -dict system/setAnalyticSolutionDict
+setExprFields -noZero -dict system/setAbsErrorFieldDict
+postProcess -func 'cellMax(absErr)' | grep "max"
