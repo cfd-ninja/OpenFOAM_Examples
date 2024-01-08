@@ -29,41 +29,40 @@ internalField   #codeStream
 
     codeOptions // Добавление новых путей для поиска подключаемых файлов при компиляции
     #{
-			-I$(LIB_SRC)/finiteVolume/lnInclude \
-			-I$(LIB_SRC)/meshTools/lnInclude
+        -I$(LIB_SRC)/finiteVolume/lnInclude \
+        -I$(LIB_SRC)/meshTools/lnInclude
     #};
 
     codeLibs // Подключение библиотек
     #{
-			-lmeshTools \
-			-lfiniteVolume
+        -lmeshTools \
+        -lfiniteVolume
     #};
 
-	// Секция с кодом C++
+    // Секция с кодом C++
     code
     #{
-			// Получение данных о сетке (объект 'mesh')
-			const IOdictionary& d = static_cast<const IOdictionary&>(dict);
-			const fvMesh& mesh = refCast<const fvMesh>(d.db());
+        // Получение данных о сетке (объект 'mesh')
+        const IOdictionary& d = static_cast<const IOdictionary&>(dict);
+        const fvMesh& mesh = refCast<const fvMesh>(d.db());
+        // Создание списка скалярных значений ('T')
+        // Эти значения будут записаны в центры ячеек, как начальное условие
+        scalarField T(mesh.nCells()); // n.Cells() возвращает кол-во ячеек
 
-			// Создание списка скалярных значений ('T')
-			// Эти значения будут записаны в центры ячеек, как начальное условие
-			scalarField T(mesh.nCells()); // n.Cells() возвращает кол-во ячеек
+        // 'CC' это список векторных значений -- центры ячеек
+        const vectorField& CC = mesh.C();
 
-			// 'CC' это список векторных значений -- центры ячеек
-			const vectorField& CC = mesh.C();
+        forAll(CC, i) // Цикл по всем центрам ячеек
+        {
+            scalar x = CC[i].x(); // 'X' - координата очередной ячейки
+            //scalar y = CC[i].y(); // 'Y' - координата очередной ячейки
+            //scalar z = CC[i].z(); // 'Z' - координата очередной ячейки
 
-			forAll(CC, i) // Цикл по всем центрам ячеек
-			{
-				scalar x = CC[i].x(); // 'X' - координата очередной ячейки
-				//scalar y = CC[i].y(); // 'Y' - координата очередной ячейки
-				//scalar z = CC[i].z(); // 'Z' - координата очередной ячейки
+            // Формула, определяющая начальные условия на поле 'T'
+            T[i] = x*x;
+        }
 
-				// Формула, определяющая начальные условия на поле 'T'
-				T[i] = x*x;
-			}
-
-			T.writeEntry("", os); // Оператор записи значений (в оперативную память)
+        T.writeEntry("", os); // Запись значений (в оперативную память)
     #};
 };
 
@@ -72,58 +71,59 @@ internalField   #codeStream
 // Граничные условия
 boundaryField
 {
-	minX // t>0: T = 2t
+    minX // t>0: T = 2t
     {
-		type  codedFixedValue; // тип неравномерных граничных условий первого рода
-		value  uniform 0; // значения для инициализации (произвольное)
-		name	codedBC_1; // 'name' имя созданного граничного условия
-		code // участок с кодом C++
-		#{
-			// 'boundaryRegion' участок сетки, относящийся к границ
-			const fvPatch & boundaryRegion = this->patch();
+        type    codedFixedValue; // тип неравномерных граничных условий первого рода
+        value   uniform 0; // значения для инициализации (произвольное)
+        name    codedBC_1; // 'name' имя созданного граничного условия
+        code // участок с кодом C++
+        #{
+            // 'boundaryRegion' участок сетки, относящийся к границ
+            const fvPatch & boundaryRegion = this->patch();
 
-			// центры граничных граней граней
-			const vectorField& facesCenters = boundaryRegion.Cf();
+            // центры граничных граней граней
+            const vectorField& facesCenters = boundaryRegion.Cf();
 
-			// значение времени
-			const scalar t = this->db().time().value();
+            // значение времени
+            const scalar t = this->db().time().value();
 
-			// значение поля 'T' в центрах граней, участка границы boundaryRegion
-			scalarField& Tb = *this;
+            // значение поля 'T' в центрах граней,
+            // расположенных на участке 'minX' границы области
+            scalarField& Tb = *this;
 
-			forAll(facesCenters, i) // цикл по всем граням границы
-			{
-				// формула для граничных значений поля 'T'
-				// на каждом временном слое значения обновляются
-				Tb[i] = 2.0 * t;
-			}
-		#};
-	}
+            forAll(facesCenters, i) // цикл по всем граням границы
+            {
+                // формула для граничных значений поля 'T'
+                // на каждом временном слое значения обновляются
+                Tb[i] = 2.0 * t;
+            }
+        #};
+    }
 
     maxX // t>0: T = 1 + 2t
     {
-		type  codedFixedValue;
-		value  uniform 0;
-		name	codedBC_2;
-		code
-		#{
-			const fvPatch & boundaryRegion = this->patch();
-			const vectorField& facesCenters = boundaryRegion.Cf();
-			const scalar t = this->db().time().value();
-			scalarField& Tb = *this;
-			forAll(facesCenters, i) // цикл по всем граням границы
-			{
-				Tb[i] = 1.0 + 2.0*t;
-			}
-		#};
+        type    codedFixedValue;
+        value   uniform 0;
+        name    codedBC_2;
+        code
+        #{
+            const fvPatch & boundaryRegion = this->patch();
+            const vectorField& facesCenters = boundaryRegion.Cf();
+            const scalar t = this->db().time().value();
+            scalarField& Tb = *this;
+            forAll(facesCenters, i) // цикл по всем граням границы
+            {
+                Tb[i] = 1.0 + 2.0*t;
+            }
+        #};
     }
 
-    "minY|maxY|minZ|maxZ"
+    "minY|maxY|minZ|maxZ" // Имена частей границ можно объединять
     {
-			//type	fixedGradient;
-			//gradient	uniform 0.0;
-			type	zeroGradient;
-		}
+        //type	fixedGradient;
+        //gradient	uniform 0.0;
+        type	zeroGradient;
+    }
 }
 
 // ************************************************************************* //

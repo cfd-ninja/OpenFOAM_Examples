@@ -30,46 +30,46 @@ internalField   #codeStream
 
     codeOptions // Добавление новых путей для поиска подключаемых файлов при компиляции
     #{
-			-I$(LIB_SRC)/finiteVolume/lnInclude \
-			-I$(LIB_SRC)/meshTools/lnInclude
+          -I$(LIB_SRC)/finiteVolume/lnInclude \
+          -I$(LIB_SRC)/meshTools/lnInclude
     #};
 
     codeLibs // Подключение библиотек
     #{
-			-lmeshTools \
-			-lfiniteVolume
+		-lmeshTools \
+        -lfiniteVolume
     #};
 
-		// Секция с кодом C++
+    // Секция с кодом C++
     code
     #{
-			// Получение данных о сетке (объект 'mesh')
-			const IOdictionary& d = static_cast<const IOdictionary&>(dict);
-      const fvMesh& mesh = refCast<const fvMesh>(d.db());
+        // Получение данных о сетке (объект 'mesh')
+        const IOdictionary& d = static_cast<const IOdictionary&>(dict);
+        const fvMesh& mesh = refCast<const fvMesh>(d.db());
 
-			// Создание списка векторных значений ('U')
-			// Эти значения будут записаны в центры ячеек, как начальное условие
-			vectorField U(mesh.nCells()); // n.Cells() возвращает кол-во ячеек
+        // Создание списка векторных значений ('U')
+        // Эти значения будут записаны в центры ячеек, как начальное условие
+        vectorField U(mesh.nCells()); // n.Cells() возвращает кол-во ячеек
 
-			// 'CC' это список векторных значений -- центры ячеек
-			const vectorField& CC = mesh.C();
+        // 'CC' это список векторных значений -- центры ячеек
+        const vectorField& CC = mesh.C();
 
-			forAll(CC, i) // Цикл по всем центрам ячеек
-			{
-				scalar x = CC[i].x(); // 'X' - координата очередной ячейки
-				scalar y = CC[i].y(); // 'Y' - координата очередной ячейки
-				scalar z = CC[i].z(); // 'Z' - координата очередной ячейки
+        forAll(CC, i) // Цикл по всем центрам ячеек
+        {
+            scalar x = CC[i].x(); // 'X' - координата очередной ячейки
+            scalar y = CC[i].y(); // 'Y' - координата очередной ячейки
+            scalar z = CC[i].z(); // 'Z' - координата очередной ячейки
 
-				// Формула, определяющая начальные условия на компоненты поля 'U'
-				U[i] = vector(x, y, z);
+            // Формула, определяющая начальные условия на компоненты поля 'U'
+            U[i] = vector(x, y, z);
 
-        // Можно отдельно для каждой комоненты записать формулу
-				//U[i].x() = x;
-        //U[i].y() = y;
-        //U[i].z() = z;
-			}
+            // Можно отдельно для каждой комоненты записать формулу
+            //U[i].x() = x;
+            //U[i].y() = y;
+            //U[i].z() = z;
+        }
 
-			U.writeEntry("", os); // Оператор записи значений (в оперативную память)
+        U.writeEntry("", os); // Оператор записи значений (в оперативную память)
     #};
 };
 

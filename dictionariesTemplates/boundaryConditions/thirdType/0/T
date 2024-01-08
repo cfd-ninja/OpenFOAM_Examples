@@ -1,10 +1,10 @@
 /*--------------------------------*- C++ -*----------------------------------*\
-| =========                 |                                                 |
-| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  v2306                                 |
-|   \\  /    A nd           | Website:  www.openfoam.com                      |
-|    \\/     M anipulation  |                                                 |
-\*---------------------------------------------------------------------------*/
+ | =========                 |                                                 |*
+ | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+ |  \\    /   O peration     | Version:  v2306                                 |
+ |   \\  /    A nd           | Website:  www.openfoam.com                      |
+ |    \\/     M anipulation  |                                                 |
+ \*---------------------------------------------------------------------------*/
 FoamFile
 {
     version     2.0;
@@ -33,7 +33,7 @@ boundaryField
         code 
         #{
             const fvPatch& boundaryPatch   = this->patch(); // Доступ к границе сетки
-            const vectorField& CF = boundaryPatch.Cf(); // Массив центров граничных граней
+            const vectorField& CF = boundaryPatch.Cf();//Массив центров граней границы
 
             //!!! delta ОБРАТНЫЕ расстояния от центров яччек до граней !!!
             const scalarField& delta      = spherePatch.deltaCoeffs();  
@@ -50,10 +50,9 @@ boundaryField
                 // "Изменяемая" часть
                 this->valueFraction()[i] = 1.0 / (1.0 + (k*delta[i])/h); 
                 this->refGrad()[i] = 0.0;
-                this->refValue()[i] = x + y + z + Foam::sin(t); // Формула в условии 3-го рода
+                this->refValue()[i] = x + y + z + Foam::sin(t); // Условие 3-го рода
             }
         #};
     }
 }
-
 // ************************************************************************* //
