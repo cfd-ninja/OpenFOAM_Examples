@@ -25,7 +25,7 @@ boundaryField
     boundaryRegion // Имя граничной области (см. файл blockMeshDict)
     {
         type  codedFixedValue; // тип неравномерных граничных условий первого рода
-        value  uniform 0; // значения для инициализации (произвольное)
+        value  uniform (0 0 0); // значения для инициализации (произвольное)
 
         name	codedBC; // 'name' имя созданного граничного условия
 
